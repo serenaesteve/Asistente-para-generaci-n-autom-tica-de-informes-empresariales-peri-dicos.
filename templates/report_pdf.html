@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'DM Sans', Arial, sans-serif; color: #1a1a1a; font-size: 13px; background: #fff; }
+.page { padding: 48px 56px; }
+
+/* HEADER */
+.header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 24px; border-bottom: 3px solid #E8186D; margin-bottom: 32px; }
+.logo { font-size: 24px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; }
+.logo span { color: #E8186D; }
+.header-right { text-align: right; }
+.header-right .report-type { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #999; }
+.header-right .company { font-size: 16px; font-weight: 600; margin-top: 4px; }
+.header-right .period { font-size: 12px; color: #666; }
+
+/* TITLE */
+.report-title { font-size: 26px; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.5px; }
+.report-meta { font-size: 11px; color: #999; letter-spacing: 1px; margin-bottom: 28px; }
+
+/* SECTION */
+.section { margin-bottom: 28px; }
+.section-title { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #E8186D; font-weight: 600; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid #eee; }
+
+/* ANALYSIS */
+.analysis { background: #fafafa; border-left: 4px solid #E8186D; padding: 16px 20px; border-radius: 4px; font-size: 12.5px; line-height: 1.8; white-space: pre-wrap; color: #2a2a2a; }
+
+/* TABLE */
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+th { text-align: left; padding: 8px 10px; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #999; border-bottom: 1px solid #eee; font-weight: 500; }
+td { padding: 9px 10px; border-bottom: 1px solid #f5f5f5; color: #333; }
+tr:last-child td { border-bottom: none; }
+
+/* KPI GRID */
+.kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.kpi-card { background: #fafafa; border: 1px solid #eee; border-radius: 4px; padding: 14px 16px; }
+.kpi-label { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #999; margin-bottom: 6px; }
+.kpi-value { font-size: 22px; font-weight: 700; color: #E8186D; }
+.kpi-unit { font-size: 10px; color: #999; margin-top: 2px; }
+
+/* FOOTER */
+.footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid #eee; display: flex; justify-content: space-between; font-size: 10px; color: #bbb; letter-spacing: 1px; }
+</style>
+</head>
+<body>
+<div class="page">
+  {% set rt = report_types.get(report.report_type, {'label': report.report_type, 'icon': '📋'}) %}
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo"><span>s.</span>REPORTS</div>
+    <div class="header-right">
+      <div class="report-type">{{ rt.icon }} {{ rt.label }}</div>
+      <div class="company">{{ report.company_name }}</div>
+      <div class="period">{{ report.period_label or report.period }}</div>
+    </div>
+  </div>
+
+  <!-- Title -->
+  <div class="report-title">{{ report.title }}</div>
+  <div class="report-meta">Generado el {{ report.created_at[:10] }} · ID #{{ report.id }}{% if report.sector %} · {{ report.sector }}{% endif %}</div>
+
+  <!-- Analysis -->
+  <div class="section">
+    <div class="section-title">Análisis Ejecutivo · IA</div>
+    <div class="analysis">{{ report.analysis or 'Análisis no disponible.' }}</div>
+  </div>
+
+  <!-- Data -->
+  {% if data %}
+  <div class="section">
+    <div class="section-title">Datos del Período</div>
+
+    {% if data.source == 'manual' and data.metrics %}
+    <div class="kpi-grid">
+      {% for m in data.metrics %}
+      <div class="kpi-card">
+        <div class="kpi-label">{{ m.name }}</div>
+        <div class="kpi-value">{{ m.value }}</div>
+        <div class="kpi-unit">{{ m.unit }}</div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% elif data.source == 'file' and data.rows %}
+    <table>
+      <thead>
+        <tr>{% for k in data.rows[0].keys() %}<th>{{ k }}</th>{% endfor %}</tr>
+      </thead>
+      <tbody>
+        {% for row in data.rows[:30] %}
+        <tr>{% for v in row.values() %}<td>{{ v }}</td>{% endfor %}</tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% if data.rows|length > 30 %}
+    <p style="font-size:11px;color:#999;text-align:center;margin-top:8px">Mostrando 30 de {{ data.rows|length }} registros</p>
+    {% endif %}
+
+    {% elif data.source == 'form' %}
+    <table>
+      <tbody>
+        {% for key, val in data.fields.items() %}
+          {% if key not in ['company_id','title','report_type','period','period_label','data_source','csrf_token'] and val %}
+          <tr>
+            <td style="color:#999;width:40%">{{ key.replace('_',' ').title() }}</td>
+            <td style="font-weight:500">{{ val if val is string else val[0] if val is iterable else val }}</td>
+          </tr>
+          {% endif %}
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <!-- Footer -->
+  <div class="footer">
+    <span>s.reports · Informes Automáticos con IA</span>
+    <span>{{ report.company_name }} · {{ report.period_label or report.period }}</span>
+    <span>Confidencial</span>
+  </div>
+</div>
+</body>
+</html>

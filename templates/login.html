@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login — s.reports</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green: #00F5A0;
+  --pink: #FF2D8F;
+  --bg: #0d0d0d;
+  --surface: #141414;
+  --surface2: #1a1a1a;
+  --border: #2a2a2a;
+  --text: #ffffff;
+  --text-dim: #aaaaaa;
+  --text-muted: #555;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Space Grotesk', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  overflow: hidden;
+}
+
+/* LEFT PANEL */
+.left-panel {
+  width: 55%;
+  min-height: 100vh;
+  position: relative;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 80px;
+  overflow: hidden;
+}
+/* Diagonal bands like Panic */
+.left-panel::before {
+  content: '';
+  position: absolute;
+  top: -100px; right: -150px;
+  width: 700px; height: 200%;
+  background: var(--pink);
+  transform: rotate(-18deg);
+  opacity: 0.12;
+}
+.left-panel::after {
+  content: '';
+  position: absolute;
+  top: -100px; right: 50px;
+  width: 400px; height: 200%;
+  background: var(--green);
+  transform: rotate(-18deg);
+  opacity: 0.07;
+}
+.panel-content { position: relative; z-index: 1; }
+.logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 64px;
+  letter-spacing: 6px;
+  line-height: 1;
+  margin-bottom: 24px;
+}
+.logo .s { color: var(--green); }
+.logo .dot { color: var(--text-muted); }
+.logo .rep { color: var(--pink); }
+.tagline {
+  font-size: 14px;
+  color: var(--text-dim);
+  line-height: 1.8;
+  max-width: 360px;
+  margin-bottom: 48px;
+}
+.features { display: flex; flex-direction: column; gap: 14px; }
+.feat {
+  display: flex; align-items: center; gap: 14px;
+  font-size: 13px; color: var(--text-dim);
+}
+.feat-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  flex-shrink: 0;
+}
+.bottom-tag {
+  position: absolute;
+  bottom: 40px; left: 80px;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* RIGHT PANEL — FORM */
+.right-panel {
+  width: 45%;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 72px;
+  background: var(--bg);
+  position: relative;
+}
+.right-panel::before {
+  content: '';
+  position: absolute;
+  bottom: -80px; right: -80px;
+  width: 300px; height: 300px;
+  border-radius: 50%;
+  background: var(--pink);
+  opacity: 0.04;
+}
+
+.form-box { width: 100%; max-width: 380px; }
+.form-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 38px;
+  letter-spacing: 4px;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+.form-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 36px; }
+
+.form-group { margin-bottom: 20px; }
+label {
+  display: block;
+  font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--text-dim); margin-bottom: 8px; font-weight: 500;
+}
+input[type=email], input[type=password], input[type=text] {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 13px 18px;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+input:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(0,245,160,0.08);
+}
+
+.error-msg {
+  background: rgba(255,45,143,0.08);
+  border: 1px solid rgba(255,45,143,0.2);
+  border-left: 3px solid var(--pink);
+  color: var(--pink);
+  padding: 12px 16px;
+  border-radius: 4px;
+  font-size: 13px;
+  margin-bottom: 22px;
+}
+
+.btn-submit {
+  width: 100%;
+  background: var(--pink);
+  color: #fff;
+  border: none;
+  padding: 15px;
+  border-radius: 4px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  letter-spacing: 3px;
+  cursor: pointer;
+  box-shadow: 0 0 30px rgba(255,45,143,0.35);
+  transition: all 0.2s;
+  margin-top: 8px;
+}
+.btn-submit:hover {
+  background: #ff0070;
+  box-shadow: 0 0 50px rgba(255,45,143,0.55);
+  transform: translateY(-1px);
+}
+
+.form-footer {
+  margin-top: 28px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.form-footer a { color: var(--green); text-decoration: none; font-weight: 500; }
+.form-footer a:hover { text-decoration: underline; }
+
+.divider {
+  display: flex; align-items: center; gap: 12px;
+  margin: 24px 0; color: var(--text-muted); font-size: 11px; letter-spacing: 2px;
+}
+.divider::before, .divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+
+@media (max-width: 768px) {
+  body { flex-direction: column; }
+  .left-panel { width: 100%; min-height: auto; padding: 48px 36px; }
+  .right-panel { width: 100%; padding: 48px 36px; }
+}
+</style>
+</head>
+<body>
+
+<!-- LEFT -->
+<div class="left-panel">
+  <div class="panel-content">
+    <div class="logo">
+      <span class="s">S</span><span class="dot">.</span><span class="rep">REPORTS</span>
+    </div>
+    <p class="tagline">
+      Genera informes empresariales automáticos con inteligencia artificial local. 
+      Análisis ejecutivo, KPIs, financiero, RRHH y marketing.
+    </p>
+    <div class="features">
+      <div class="feat"><div class="feat-dot" style="background:var(--green)"></div>Análisis IA con Ollama LLaMA 3</div>
+      <div class="feat"><div class="feat-dot" style="background:var(--pink)"></div>Exportación PDF automática</div>
+      <div class="feat"><div class="feat-dot" style="background:#50a0ff"></div>CSV, Excel y entrada manual</div>
+      <div class="feat"><div class="feat-dot" style="background:#ffb400"></div>Multi-empresa y multi-usuario</div>
+    </div>
+  </div>
+  <div class="bottom-tag">Powered by Ollama · LLaMA 3 · Local AI</div>
+</div>
+
+<!-- RIGHT -->
+<div class="right-panel">
+  <div class="form-box">
+    <div class="form-title">ACCEDER</div>
+    <div class="form-sub">Introduce tus credenciales para continuar</div>
+
+    {% if error %}
+    <div class="error-msg">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" name="email" required placeholder="tu@empresa.com" autofocus>
+      </div>
+      <div class="form-group">
+        <label>Contraseña</label>
+        <input type="password" name="password" required placeholder="••••••••">
+      </div>
+      <button type="submit" class="btn-submit">ENTRAR</button>
+    </form>
+
+    <div class="divider">o</div>
+
+    <div class="form-footer">
+      ¿Sin cuenta? <a href="{{ url_for('register') }}">Crear cuenta gratis →</a>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

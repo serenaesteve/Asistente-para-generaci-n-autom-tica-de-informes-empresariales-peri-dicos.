@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — s.reports{% endblock %}
+{% block page_title %}DASHBOARD{% endblock %}
+
+{% block content %}
+
+<!-- HERO BAND -->
+<div style="position:relative;margin:-36px -36px 32px;padding:40px 36px;background:var(--surface);border-bottom:1px solid var(--border);overflow:hidden">
+  <!-- diagonal bands -->
+  <div style="position:absolute;top:-30px;right:-60px;width:400px;height:300%;background:var(--pink);transform:rotate(-12deg);opacity:0.07;pointer-events:none"></div>
+  <div style="position:absolute;top:-30px;right:60px;width:400px;height:300%;background:var(--green);transform:rotate(-12deg);opacity:0.05;pointer-events:none"></div>
+
+  <div style="position:relative;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px">
+    <div>
+      <div style="font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px">Generador Automático de Informes</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:52px;letter-spacing:4px;line-height:1;color:var(--text)">
+        INFORMES <span style="color:var(--green)">AI</span>
+      </div>
+      <div style="font-size:13px;color:var(--text-muted);margin-top:8px">Análisis ejecutivo automático · Ollama LLaMA 3 · Multi-empresa</div>
+    </div>
+    <a href="{{ url_for('new_report') }}" style="display:inline-flex;align-items:center;gap:10px;background:var(--pink);color:#fff;padding:16px 32px;border-radius:4px;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;box-shadow:0 0 30px rgba(255,45,143,0.4);transition:all 0.2s">
+      + NUEVO INFORME
+    </a>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-stripe" style="background:var(--pink)"></div>
+    <div class="stat-label">Total informes</div>
+    <div class="stat-value" style="color:var(--pink)">{{ stats.total_reports }}</div>
+    <div class="stat-sub">Generados</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-stripe" style="background:var(--green)"></div>
+    <div class="stat-label">Este mes</div>
+    <div class="stat-value" style="color:var(--green)">{{ stats.this_month }}</div>
+    <div class="stat-sub">Período actual</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-stripe" style="background:#50a0ff"></div>
+    <div class="stat-label">Empresas</div>
+    <div class="stat-value" style="color:#50a0ff">{{ stats.companies }}</div>
+    <div class="stat-sub">Registradas</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-stripe" style="background:#ffb400"></div>
+    <div class="stat-label">Borradores</div>
+    <div class="stat-value" style="color:#ffb400">{{ stats.pending }}</div>
+    <div class="stat-sub">Sin publicar</div>
+  </div>
+</div>
+
+<!-- TYPE QUICK ACCESS -->
+<div class="type-cards">
+  {% for key, rt in report_types.items() %}
+  <a href="{{ url_for('new_report') }}?type={{ key }}" class="type-card">
+    <div class="tc-icon">{{ rt.icon }}</div>
+    <div class="tc-label">{{ rt.label }}</div>
+  </a>
+  {% endfor %}
+</div>
+
+<!-- REPORTS TABLE -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">Informes Recientes</div>
+    <a href="{{ url_for('new_report') }}" class="btn btn-ghost btn-sm">+ Nuevo</a>
+  </div>
+  {% if reports %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Título</th>
+          <th>Empresa</th>
+          <th>Tipo</th>
+          <th>Período</th>
+          <th>Estado</th>
+          <th>Fecha</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in reports %}
+        <tr>
+          <td class="mono" style="color:var(--text-muted)">#{{ r.id }}</td>
+          <td style="color:var(--text);font-weight:500">{{ r.title }}</td>
+          <td>{{ r.company_name or '—' }}</td>
+          <td><span class="badge badge-{{ r.report_type }}">{{ report_types[r.report_type].label if r.report_type in report_types else r.report_type }}</span></td>
+          <td class="mono" style="font-size:12px">{{ r.period_label or r.period }}</td>
+          <td><span class="badge badge-{{ r.status }}">{{ r.status }}</span></td>
+          <td style="color:var(--text-muted);font-size:12px">{{ r.created_at[:10] }}</td>
+          <td>
+            <div style="display:flex;gap:6px">
+              <a href="{{ url_for('view_report', report_id=r.id) }}" class="btn btn-ghost btn-sm">Ver</a>
+              <a href="{{ url_for('export_pdf', report_id=r.id) }}" class="btn btn-ghost btn-sm">PDF</a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty">
+    <div class="empty-icon">📋</div>
+    <div style="margin-bottom:16px;color:var(--text-dim)">No hay informes todavía</div>
+    <a href="{{ url_for('new_report') }}" class="btn btn-primary">Generar primer informe</a>
+  </div>
+  {% endif %}
+</div>
+
+<!-- COMPANIES -->
+{% if companies %}
+<div class="card" style="margin-top:20px">
+  <div class="card-header">
+    <div class="card-title">Empresas</div>
+    <button class="btn btn-ghost btn-sm" onclick="document.getElementById('addCompanyModal').classList.add('open')">+ Añadir</button>
+  </div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap">
+    {% for c in companies %}
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 18px;border-top:2px solid var(--green)">
+      <div style="font-weight:600;font-size:13px;color:var(--text)">{{ c.name }}</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:2px">{{ c.sector or 'Sin sector' }}</div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}

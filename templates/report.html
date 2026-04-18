@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% block title %}{{ report.title }} — s.reports{% endblock %}
+{% block page_title %}INFORME{% endblock %}
+
+{% block content %}
+{% set rt = report_types.get(report.report_type, {'label': report.report_type, 'icon': '📋', 'color': '#FF2D8F'}) %}
+
+<!-- HEADER BAND -->
+<div style="position:relative;margin:-36px -36px 32px;padding:36px;background:var(--surface);border-bottom:1px solid var(--border);overflow:hidden">
+  <div style="position:absolute;top:-30px;right:-60px;width:500px;height:300%;background:var(--pink);transform:rotate(-12deg);opacity:0.06;pointer-events:none"></div>
+  <div style="position:absolute;top:-30px;right:100px;width:300px;height:300%;background:var(--green);transform:rotate(-12deg);opacity:0.04;pointer-events:none"></div>
+
+  <div style="position:relative">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <span class="badge badge-{{ report.report_type }}">{{ rt.icon }} {{ rt.label }}</span>
+      <span class="badge badge-{{ report.status }}">{{ report.status }}</span>
+      <span class="mono" style="color:var(--text-muted);font-size:11px">#{{ report.id }}</span>
+    </div>
+    <h1 style="font-family:'Bebas Neue',sans-serif;font-size:40px;letter-spacing:3px;margin-bottom:8px;line-height:1">{{ report.title }}</h1>
+    <div style="font-size:13px;color:var(--text-dim)">
+      {{ report.company_name }}{% if report.sector %} · {{ report.sector }}{% endif %}
+      <span style="color:var(--border);margin:0 8px">·</span>
+      Período: <span style="color:var(--green);font-weight:600">{{ report.period_label or report.period }}</span>
+      <span style="color:var(--border);margin:0 8px">·</span>
+      {{ report.created_at[:10] }}
+    </div>
+  </div>
+</div>
+
+<!-- ACTIONS -->
+<div style="display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap">
+  <button class="btn btn-ghost" onclick="regenerate()" id="regenBtn">
+    <span id="regenIcon">↺</span> Regenerar IA
+    <span id="regenSpinner" style="display:none" class="spinner"></span>
+  </button>
+  <a href="{{ url_for('export_pdf', report_id=report.id) }}" class="btn btn-ghost">⬇ Exportar PDF</a>
+  <a href="{{ url_for('index') }}" class="btn btn-ghost">← Dashboard</a>
+  <form method="POST" action="{{ url_for('delete_report', report_id=report.id) }}" onsubmit="return confirm('¿Eliminar?')" style="margin-left:auto">
+    <button type="submit" class="btn btn-danger btn-sm">✕ Eliminar</button>
+  </form>
+</div>
+
+<!-- ANALYSIS -->
+<div class="card" style="margin-bottom:20px;border-left:3px solid var(--green)">
+  <div class="card-header">
+    <div class="card-title" style="display:flex;align-items:center;gap:10px">
+      <span style="color:var(--green)">✦</span> Análisis IA · Ollama LLaMA 3
+    </div>
+  </div>
+  <div class="analysis-block" id="analysisBlock">{{ report.analysis or 'Sin análisis generado.' }}</div>
+</div>
+
+<!-- DATA -->
+{% if data %}
+<div class="card" style="margin-bottom:20px">
+  <div class="card-header">
+    <div class="card-title">Datos del Período</div>
+    <span style="font-size:11px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase">{{ data.source or 'raw' }}</span>
+  </div>
+
+  {% if data.source == 'manual' and data.metrics %}
+  <div class="grid-2">
+    <div>
+      <table>
+        <thead><tr><th>Métrica</th><th>Valor</th><th>Unidad</th></tr></thead>
+        <tbody>
+          {% for m in data.metrics %}
+          <tr>
+            <td style="color:var(--text)">{{ m.name }}</td>
+            <td class="mono" style="color:var(--green);font-weight:600">{{ m.value }}</td>
+            <td style="color:var(--text-muted)">{{ m.unit }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div><canvas id="metricsChart"></canvas></div>
+  </div>
+
+  {% elif data.source == 'file' and data.rows %}
+  <div class="table-wrap" style="max-height:320px;overflow-y:auto">
+    <table>
+      <thead>
+        <tr>{% for key in data.rows[0].keys() %}<th>{{ key }}</th>{% endfor %}</tr>
+      </thead>
+      <tbody>
+        {% for row in data.rows[:50] %}
+        <tr>{% for val in row.values() %}<td>{{ val }}</td>{% endfor %}</tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if data.rows|length > 50 %}
+  <div style="text-align:center;padding:10px;font-size:11px;color:var(--text-muted)">50 / {{ data.rows|length }} filas</div>
+  {% endif %}
+
+  {% elif data.source == 'form' %}
+  <div style="display:flex;flex-wrap:wrap;gap:12px">
+    {% for key, val in data.fields.items() %}
+      {% if key not in ['company_id','title','report_type','period','period_label','data_source','csrf_token'] and val %}
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;border-top:2px solid var(--pink)">
+        <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px">{{ key.replace('_',' ') }}</div>
+        <div class="mono" style="font-size:18px;color:var(--green);font-weight:600">{{ val if val is string else val[0] if val is iterable else val }}</div>
+      </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+{% if data and data.source == 'manual' and data.metrics %}
+const ctx = document.getElementById('metricsChart').getContext('2d');
+new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: {{ data.metrics | map(attribute='name') | list | tojson }},
+    datasets: [{
+      data: {{ data.metrics | map(attribute='value') | list | tojson }},
+      backgroundColor: ['rgba(255,45,143,0.15)','rgba(0,245,160,0.15)','rgba(80,160,255,0.15)','rgba(255,180,0,0.15)','rgba(255,45,143,0.15)'],
+      borderColor: ['#FF2D8F','#00F5A0','#50a0ff','#ffb400','#FF2D8F'],
+      borderWidth: 2,
+      borderRadius: 2,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { color: '#222' }, ticks: { color: '#666', font: { size: 11 } } },
+      y: { grid: { color: '#222' }, ticks: { color: '#666', font: { size: 11 } } }
+    }
+  }
+});
+{% endif %}
+
+async function regenerate() {
+  const btn = document.getElementById('regenBtn');
+  btn.disabled = true;
+  document.getElementById('regenSpinner').style.display = 'inline-block';
+  document.getElementById('regenIcon').style.display = 'none';
+  document.getElementById('analysisBlock').style.opacity = '0.3';
+  try {
+    const r = await fetch('{{ url_for("regenerate_analysis", report_id=report.id) }}', { method: 'POST' });
+    const d = await r.json();
+    document.getElementById('analysisBlock').textContent = d.analysis;
+    toast('✦ Análisis regenerado');
+  } catch(e) { toast('Error al regenerar'); }
+  btn.disabled = false;
+  document.getElementById('regenSpinner').style.display = 'none';
+  document.getElementById('regenIcon').style.display = 'inline';
+  document.getElementById('analysisBlock').style.opacity = '1';
+}
+</script>
+{% endblock %}

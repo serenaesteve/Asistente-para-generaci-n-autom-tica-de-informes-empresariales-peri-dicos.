@@ -167,7 +167,7 @@ def call_ollama(prompt):
             'model': 'llama3',
             'prompt': prompt,
             'stream': False
-        }, timeout=120)
+        }, timeout=999)
         return r.json().get('response', 'Sin respuesta del modelo.')
     except Exception as e:
         return f'[Ollama no disponible: {e}]'
